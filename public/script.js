@@ -1,6 +1,8 @@
 var sigCanvas = document.getElementById("sigCanvas");
 var sigCtx = sigCanvas.getContext("2d");
 
+var submitSig = document.getElementById("submitSig");
+
 var signing = false;
 
 var startX;
@@ -31,4 +33,12 @@ sigCanvas.addEventListener("mouseup", function() {
 });
 sigCanvas.addEventListener("mouseleave", function() {
     signing = false;
+});
+
+submitSig.addEventListener("mousedown", function() {
+    // turning canvas into data url
+    var signature = sigCanvas.toDataURL();
+    // hidden field for signature
+    var signatureField = document.getElementById("signatureField");
+    signatureField.value = signature;
 });

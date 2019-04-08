@@ -3,9 +3,16 @@ const app = express();
 
 const db = require("./db");
 
+const cookieSession = require("cookie-session");
+
 const csurf = require("csurf");
 
-// cookie-session app.use here
+app.use(
+    cookieSession({
+        secret: `I'm always angry.`,
+        maxAge: 1000 * 60 * 60 * 24 * 14
+    })
+);
 
 // to be able to read input fields from url requests
 app.use(
@@ -14,12 +21,12 @@ app.use(
     })
 );
 
-//app.use(csurf());
+app.use(csurf());
 
 // things we want in every single page
 app.use((req, res, next) => {
     res.setHeader("x-frame-options", "DENY");
-    // res.locals.csrfToken = req.csrfToken();
+    res.locals.csrfToken = req.csrfToken();
     next();
 });
 
@@ -40,24 +47,30 @@ app.post("/petition", (req, res) => {
     let firstName = req.body.firstName;
     let lastName = req.body.lastName;
     let signatureUrl = req.body.signatureUrl;
-    db.addSignature(firstName, lastName, signatureUrl)
-        .then(id => {
-            console.log(id);
-            // set ID in cookies
-            res.redirect("/thanks");
-            // res.render to send template back as a response
-        })
-        .catch(err => {
-            console.log(err);
+    let notValid = "Oops, something is not working.";
+    if (firstName == "" || lastName == "" || signatureUrl == "") {
+        res.render("petition", {
+            layout: "main",
+            notValid
         });
+    } else {
+        db.addSignature(firstName, lastName, signatureUrl)
+            .then(sigId => {
+                req.session.sigId = sigId.rows[0].id;
+                console.log(req.session.id);
+                res.redirect("/thanks");
+            })
+            .catch(err => {
+                console.log(err);
+            });
+    }
 });
 
 app.get("/thanks", (req, res) => {
     db.getCount()
         .then(signersCount => {
             let numberSigners = signersCount.rows[0].count;
-            // pass id from user saved in cookies to getSignature
-            db.getSignature(5)
+            db.getSignature(req.session.sigId)
                 .then(sig => {
                     let signature = sig.rows[0].signature;
                     res.render("thanks", {
