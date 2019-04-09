@@ -1,4 +1,5 @@
 <h1>Petition</h1>
+{{>logout}}
 <p>
     Please sign for goodness.
 </p>
@@ -10,8 +11,6 @@
 {{/if}}
 
 <form method="POST">
-    <!-- <input type="text" name="firstName"/>
-    <input type="text" name="lastName"/> -->
     <input type="hidden" name="signatureUrl" id="signatureField"/>
     <input type="hidden" name="_csrf" value="{{csrfToken}}">
     <button type="submit" id="submitSig">Submit</button>

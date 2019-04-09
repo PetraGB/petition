@@ -113,7 +113,7 @@ app.post("/profile", (req, res) => {
     if (age == "" && city == "" && url == "") {
         res.redirect("/petition");
     } else {
-        // clean URL
+        // check if url is filled out, if so clean URL
         db.addProfile(age, city, url, userId)
             .then(res.redirect("/petition"))
             .catch(err => {
@@ -161,20 +161,17 @@ app.post("/login", (req, res) => {
                                         req.session.userId = userId;
                                         db.checkSignature(userId)
                                             .then(sigId => {
-                                                console.log(sigId);
-                                                if (!sigId.rows[0].id) {
+                                                if (sigId.rows.length < 1) {
                                                     res.redirect("/petition");
                                                 } else {
-                                                    req.session.sigId = !sigId
-                                                        .rows[0].id;
+                                                    req.session.sigId =
+                                                        sigId.rows[0].id;
                                                     res.redirect("/thanks");
                                                 }
                                             })
                                             .catch(err => {
                                                 console.log(err);
                                             });
-                                        // check, if signed -> thanks and save cookie
-                                        // else:
                                     } else {
                                         res.render("login", {
                                             layout: "main",
@@ -183,7 +180,10 @@ app.post("/login", (req, res) => {
                                     }
                                 })
                                 .catch(err => {
-                                    // render login with notValid
+                                    res.render("login", {
+                                        layout: "main",
+                                        notValid
+                                    });
                                     console.log(err);
                                 });
                         })
@@ -198,11 +198,6 @@ app.post("/login", (req, res) => {
     }
 });
 
-app.get("/logout", (req, res) => {
-    req.session = null;
-    res.redirect("/login");
-});
-
 app.get("/petition", (req, res) => {
     if (!req.session.userId) {
         res.redirect("/login");
@@ -213,8 +208,6 @@ app.get("/petition", (req, res) => {
             layout: "main"
         });
     }
-    // if not loged in -> redirect to login
-    // if logged and already signed -> redirect to thanks
 });
 
 app.post("/petition", (req, res) => {
@@ -226,6 +219,17 @@ app.post("/petition", (req, res) => {
         });
     } else {
         const userId = req.session.userId;
+        // db.checkSignature(userId)
+        //     .then(sigId => {
+        //         if (sigId.rows.length > 0) {
+        //             req.session.sigId =
+        //                 sigId.rows[0].id;
+        //         }
+        //         res.redirect("/thanks");
+        //     })
+        //     .catch(err => {
+        //         console.log(err);
+        //     });
         db.addSignature(signatureUrl, userId)
             .then(sigId => {
                 req.session.sigId = sigId.rows[0].id;
@@ -263,8 +267,6 @@ app.get("/thanks", (req, res) => {
                 console.log(err);
             });
     }
-    // if not loged in -> redirect to login
-    // if logged in but no signature -> redirect to petition
 });
 
 app.get("/signers", (req, res) => {
@@ -298,6 +300,11 @@ app.get("/signers/:city", (req, res) => {
             });
         });
     }
+});
+
+app.post("/logout", (req, res) => {
+    req.session = null;
+    res.redirect("/login");
 });
 
 app.use(express.static("./public"));

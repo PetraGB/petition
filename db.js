@@ -8,6 +8,12 @@ exports.checkEmail = function checkEmail(email) {
     return db.query(q, params);
 };
 
+exports.checkIdByEmail = function checkIdByEmail(email) {
+    let q = "SELECT id FROM users WHERE email = $1;";
+    let params = [email];
+    return db.query(q, params);
+};
+
 exports.addUser = function addUser(first_name, last_name, email, password) {
     let q =
         "INSERT INTO users (first_name, last_name, email, password) VALUES ($1, $2, $3, $4) RETURNING id;";
