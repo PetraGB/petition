@@ -1,7 +1,13 @@
+{{#if notValid}}
+    <p>
+        {{ notValid }}
+    </p>
+{{/if}}
+
 <form method="POST">
-    <input type="text" name="age"/>
-    <input type="text" name="city"/>
-    <input type="text" name="url"/>
+    <input type="text" name="age" placeholder="Age"/>
+    <input type="text" name="city" placeholder="City"/>
+    <input type="text" name="url" placeholder="Website"/>
     <input type="hidden" name="_csrf" value="{{csrfToken}}">
     <button type="submit">Save</button>
 </form>

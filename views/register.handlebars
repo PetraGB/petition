@@ -1,8 +1,14 @@
+{{#if notValid}}
+    <p>
+        {{ notValid }}
+    </p>
+{{/if}}
+
 <form method="POST">
-    <input type="text" name="firstName"/>
-    <input type="text" name="lastName"/>
-    <input type="text" name="email"/>
-    <input type="password" name="password"/>
+    <input type="text" name="firstName" placeholder="First Name"/>
+    <input type="text" name="lastName"placeholder="Last Name"/>
+    <input type="text" name="email" placeholder="Email"/>
+    <input type="password" name="password" placeholder="Password"/>
     <input type="hidden" name="_csrf" value="{{csrfToken}}">
     <button type="submit">Register</button>
 </form>

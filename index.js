@@ -40,17 +40,25 @@ app.set("view engine", "handlebars");
 const notValid = "Oops, something is not working.";
 
 app.get("/", (req, res) => {
-    // if userId -> petition
-    // if no cookies -> register
-    res.redirect("/register");
+    if (req.session.sigId) {
+        res.redirect("/thanks");
+    } else if (req.session.userId) {
+        res.redirect("/petition");
+    } else {
+        res.redirect("/register");
+    }
 });
 
 app.get("/register", (req, res) => {
-    // if already logged in but not signed -> redirect to petition
-    // if logged in and signature -> redirect to thanks
-    res.render("register", {
-        layout: "main"
-    });
+    if (req.session.sigId) {
+        res.redirect("/thanks");
+    } else if (req.session.userId) {
+        res.redirect("/petition");
+    } else {
+        res.render("register", {
+            layout: "main"
+        });
+    }
 });
 
 app.post("/register", (req, res) => {
@@ -74,7 +82,6 @@ app.post("/register", (req, res) => {
             } else {
                 bc.hashPassword(req.body.password)
                     .then(hashedPassword => {
-                        console.log(hashedPassword);
                         db.addUser(firstName, lastName, email, hashedPassword)
                             .then(userId => {
                                 req.session.userId = userId.rows[0].id;
@@ -106,6 +113,7 @@ app.post("/profile", (req, res) => {
     if (age == "" && city == "" && url == "") {
         res.redirect("/petition");
     } else {
+        // clean URL
         db.addProfile(age, city, url, userId)
             .then(res.redirect("/petition"))
             .catch(err => {
@@ -115,11 +123,15 @@ app.post("/profile", (req, res) => {
 });
 
 app.get("/login", (req, res) => {
-    // if already logged in but not signed -> redirect to petition
-    // if logged in and signature -> redirect to thanks
-    res.render("login", {
-        layout: "main"
-    });
+    if (req.session.sigId) {
+        res.redirect("/thanks");
+    } else if (req.session.userId) {
+        res.redirect("/petition");
+    } else {
+        res.render("login", {
+            layout: "main"
+        });
+    }
 });
 
 app.post("/login", (req, res) => {
@@ -131,24 +143,38 @@ app.post("/login", (req, res) => {
             notValid
         });
     } else {
-        db.checkEmail(email)
-            .then(userCount => {
-                if (userCount < 1) {
+        db.checkIdByEmail(email)
+            .then(emailId => {
+                if (emailId < 1) {
                     res.render("login", {
                         layout: "main",
                         notValid
                     });
                 } else {
+                    let userId = emailId.rows[0].id;
                     db.getPass(email)
                         .then(passwordData => {
                             const cryptedPass = passwordData.rows[0].password;
                             bc.checkPassword(password, cryptedPass)
                                 .then(doesMatch => {
                                     if (doesMatch) {
-                                        res.redirect("/petition");
-                                        // set cookie.session.userId
-                                        // send to thanks page if already signed
-                                        // send to petition if not signed yet
+                                        req.session.userId = userId;
+                                        db.checkSignature(userId)
+                                            .then(sigId => {
+                                                console.log(sigId);
+                                                if (!sigId.rows[0].id) {
+                                                    res.redirect("/petition");
+                                                } else {
+                                                    req.session.sigId = !sigId
+                                                        .rows[0].id;
+                                                    res.redirect("/thanks");
+                                                }
+                                            })
+                                            .catch(err => {
+                                                console.log(err);
+                                            });
+                                        // check, if signed -> thanks and save cookie
+                                        // else:
                                     } else {
                                         res.render("login", {
                                             layout: "main",
@@ -178,16 +204,20 @@ app.get("/logout", (req, res) => {
 });
 
 app.get("/petition", (req, res) => {
+    if (!req.session.userId) {
+        res.redirect("/login");
+    } else if (req.session.sigId) {
+        res.redirect("/thanks");
+    } else {
+        res.render("petition", {
+            layout: "main"
+        });
+    }
     // if not loged in -> redirect to login
     // if logged and already signed -> redirect to thanks
-    res.render("petition", {
-        layout: "main"
-    });
 });
 
 app.post("/petition", (req, res) => {
-    // let firstName = req.body.firstName;
-    // let lastName = req.body.lastName;
     let signatureUrl = req.body.signatureUrl;
     if (signatureUrl == "") {
         res.render("petition", {
@@ -208,40 +238,66 @@ app.post("/petition", (req, res) => {
 });
 
 app.get("/thanks", (req, res) => {
+    if (!req.session.userId) {
+        res.redirect("/login");
+    } else if (!req.session.sigId) {
+        res.redirect("/petition");
+    } else {
+        db.getCount()
+            .then(signersCount => {
+                let numberSigners = signersCount.rows[0].count;
+                db.getSignature(req.session.sigId)
+                    .then(sig => {
+                        let signature = sig.rows[0].signature;
+                        res.render("thanks", {
+                            layout: "main",
+                            numberSigners,
+                            signature
+                        });
+                    })
+                    .catch(err => {
+                        console.log(err);
+                    });
+            })
+            .catch(err => {
+                console.log(err);
+            });
+    }
     // if not loged in -> redirect to login
     // if logged in but no signature -> redirect to petition
-    db.getCount()
-        .then(signersCount => {
-            let numberSigners = signersCount.rows[0].count;
-            db.getSignature(req.session.sigId)
-                .then(sig => {
-                    let signature = sig.rows[0].signature;
-                    res.render("thanks", {
-                        layout: "main",
-                        numberSigners,
-                        signature
-                    });
-                })
-                .catch(err => {
-                    console.log(err);
-                });
-        })
-        .catch(err => {
-            console.log(err);
-        });
 });
 
 app.get("/signers", (req, res) => {
-    // if not loged in -> redirect to login
-    // if logged in but no signature -> redirect to petition
-    db.getSigners().then(namesObj => {
-        console.log(namesObj);
-        let names = namesObj.rows;
-        res.render("signers", {
-            layout: "main",
-            names
+    if (!req.session.userId) {
+        res.redirect("/login");
+    } else if (!req.session.sigId) {
+        res.redirect("/petition");
+    } else {
+        db.getSigners().then(namesObj => {
+            let names = namesObj.rows;
+            res.render("signers", {
+                layout: "main",
+                names
+            });
         });
-    });
+    }
+});
+
+app.get("/signers/:city", (req, res) => {
+    if (!req.session.userId) {
+        res.redirect("/login");
+    } else if (!req.session.sigId) {
+        res.redirect("/petition");
+    } else {
+        let city = req.params.city;
+        db.getCitySigners(city).then(namesObj => {
+            let names = namesObj.rows;
+            res.render("signers", {
+                layout: "main",
+                names
+            });
+        });
+    }
 });
 
 app.use(express.static("./public"));
