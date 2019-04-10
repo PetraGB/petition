@@ -1,6 +1,9 @@
 const spicedPg = require("spiced-pg");
 
-const db = spicedPg("postgres:postgres:postgres@localhost:5432/petition");
+const db = spicedPg(
+    process.env.DATABASE_URL ||
+        "postgres:postgres:postgres@localhost:5432/petition"
+);
 
 exports.checkEmail = function checkEmail(email) {
     let q = "SELECT COUNT(*) FROM users WHERE email = $1;";
@@ -25,6 +28,41 @@ exports.addProfile = function addProfile(age, city, url, user_id) {
     let q =
         "INSERT INTO user_profiles (age, city, url, user_id) VALUES ($1, $2, $3, $4) RETURNING id;";
     let params = [age, city, url, user_id];
+    return db.query(q, params);
+};
+
+exports.getUserDetails = function getUserDetails(user_id) {
+    let q =
+        "SELECT first_name, last_name, email, age, city, url FROM users LEFT JOIN user_profiles ON users.id = user_profiles.user_id WHERE users.id = $1;";
+    let params = [user_id];
+    return db.query(q, params);
+};
+
+exports.editProfile = function editProfile(age, city, url, user_id) {
+    let q =
+        "INSERT INTO user_profiles (age, city, url, user_id) VALUES ($1, $2, $3, $4) ON CONFLICT (user_id) DO UPDATE SET age = $1, city = $2, url = $3;";
+    let params = [age, city, url, user_id];
+    return db.query(q, params);
+};
+
+exports.editUser = function editUser(
+    first_name,
+    last_name,
+    email,
+    password,
+    id
+) {
+    let q;
+    let params;
+    if (password.length > 2) {
+        q =
+            "UPDATE users SET first_name = $1, last_name = $2, email = $3, password = $4 WHERE id = $5";
+        params = [first_name, last_name, email, password, id];
+    } else {
+        q =
+            "UPDATE users SET first_name = $1, last_name = $2, email = $3 WHERE id = $4";
+        params = [first_name, last_name, email, id];
+    }
     return db.query(q, params);
 };
 

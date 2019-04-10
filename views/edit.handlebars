@@ -1,0 +1,19 @@
+{{#if notValid}}
+    <p>
+        {{ notValid }}
+    </p>
+{{/if}}
+
+{{>logout}}
+
+<form method="POST">
+    Age <input type="text" name="age" value="{{ age }}"/>
+    City <input type="text" name="city" value="{{ city }}"/>
+    Website <input type="text" name="url" value="{{ url }}"/>
+    First Name <input type="text" name="firstName" value="{{ firstName }}"/>
+    Last Name<input type="text" name="lastName" value="{{ lastName }}"/>
+    Email <input type="text" name="email" value="{{ email }}"/>
+    Password <input type="password" name="password" placeholder="Password"/>
+    <input type="hidden" name="_csrf" value="{{csrfToken}}">
+    <button type="submit">Save</button>
+</form>

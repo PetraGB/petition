@@ -10,6 +10,8 @@ const csurf = require("csurf");
 
 app.use(
     cookieSession({
+        // put secret into secrets and .gitignore it
+        // process.env.SESSION_SECRET ||
         secret: `I'm always angry.`,
         maxAge: 1000 * 60 * 60 * 24 * 14
     })
@@ -82,13 +84,11 @@ app.post("/register", (req, res) => {
             } else {
                 bc.hashPassword(req.body.password)
                     .then(hashedPassword => {
-                        db.addUser(firstName, lastName, email, hashedPassword)
+                        return db
+                            .addUser(firstName, lastName, email, hashedPassword)
                             .then(userId => {
                                 req.session.userId = userId.rows[0].id;
                                 res.redirect("/profile");
-                            })
-                            .catch(err => {
-                                console.log(err);
                             });
                     })
                     .catch(err => {
@@ -100,9 +100,13 @@ app.post("/register", (req, res) => {
 });
 
 app.get("/profile", (req, res) => {
-    res.render("profile", {
-        layout: "main"
-    });
+    if (!req.session.userId) {
+        res.redirect("/login");
+    } else {
+        res.render("profile", {
+            layout: "main"
+        });
+    }
 });
 
 app.post("/profile", (req, res) => {
@@ -113,13 +117,101 @@ app.post("/profile", (req, res) => {
     if (age == "" && city == "" && url == "") {
         res.redirect("/petition");
     } else {
-        // check if url is filled out, if so clean URL
+        if (
+            url.indexOf("http://") != 0 &&
+            url.indexOf("https://") != 0 &&
+            url.length > 1
+        ) {
+            url = "http://" + url;
+        }
+        if (age < 1) {
+            age = null;
+        }
+
         db.addProfile(age, city, url, userId)
             .then(res.redirect("/petition"))
             .catch(err => {
                 console.log(err);
             });
     }
+});
+
+app.get("/profile/edit", (req, res) => {
+    if (!req.session.userId) {
+        res.redirect("/login");
+    } else {
+        db.getUserDetails(req.session.userId).then(results => {
+            let age = results.rows[0].age;
+            let city = results.rows[0].city;
+            let url = results.rows[0].url;
+            let firstName = results.rows[0].first_name;
+            let lastName = results.rows[0].last_name;
+            let email = results.rows[0].email;
+            res.render("edit", {
+                layout: "main",
+                age,
+                city,
+                url,
+                firstName,
+                lastName,
+                email
+            });
+        });
+    }
+});
+
+app.post("/profile/edit", (req, res) => {
+    let age = Number(req.body.age);
+    let city = req.body.city;
+    let url = req.body.url;
+    let firstName = req.body.firstName;
+    let lastName = req.body.lastName;
+    let email = req.body.email;
+    let password = req.body.password;
+    let userId = req.session.userId;
+
+    console.log(password);
+
+    if (
+        url.indexOf("http://") != 0 &&
+        url.indexOf("https://") != 0 &&
+        url.length > 1
+    ) {
+        url = "http://" + url;
+    }
+    if (age < 1) {
+        age = null;
+    }
+
+    bc.hashPassword(password)
+        .then(hashedPassword => {
+            if (password.length < 2) {
+                hashedPassword = "";
+            }
+            return db
+                .editUser(firstName, lastName, email, hashedPassword, userId)
+                .then(() => {
+                    return db.editProfile(age, city, url, userId);
+                })
+                .then(() => {
+                    res.render("edit", {
+                        layout: "main",
+                        age,
+                        city,
+                        url,
+                        firstName,
+                        lastName,
+                        email
+                    });
+                });
+        })
+        .catch(err => {
+            res.render("edit", {
+                layout: "main",
+                notValid
+            });
+            console.log(err);
+        });
 });
 
 app.get("/login", (req, res) => {
@@ -145,54 +237,43 @@ app.post("/login", (req, res) => {
     } else {
         db.checkIdByEmail(email)
             .then(emailId => {
-                if (emailId < 1) {
+                if (emailId.rows.length < 1) {
                     res.render("login", {
                         layout: "main",
                         notValid
                     });
                 } else {
                     let userId = emailId.rows[0].id;
-                    db.getPass(email)
-                        .then(passwordData => {
-                            const cryptedPass = passwordData.rows[0].password;
-                            bc.checkPassword(password, cryptedPass)
-                                .then(doesMatch => {
-                                    if (doesMatch) {
-                                        req.session.userId = userId;
-                                        db.checkSignature(userId)
-                                            .then(sigId => {
-                                                if (sigId.rows.length < 1) {
-                                                    res.redirect("/petition");
-                                                } else {
-                                                    req.session.sigId =
-                                                        sigId.rows[0].id;
-                                                    res.redirect("/thanks");
-                                                }
-                                            })
-                                            .catch(err => {
-                                                console.log(err);
-                                            });
-                                    } else {
-                                        res.render("login", {
-                                            layout: "main",
-                                            notValid
+                    return db.getPass(email).then(passwordData => {
+                        const cryptedPass = passwordData.rows[0].password;
+                        return bc
+                            .checkPassword(password, cryptedPass)
+                            .then(doesMatch => {
+                                if (doesMatch) {
+                                    req.session.userId = userId;
+                                    return db
+                                        .checkSignature(userId)
+                                        .then(sigId => {
+                                            if (sigId.rows.length < 1) {
+                                                res.redirect("/petition");
+                                            } else {
+                                                req.session.sigId =
+                                                    sigId.rows[0].id;
+                                                res.redirect("/thanks");
+                                            }
                                         });
-                                    }
-                                })
-                                .catch(err => {
-                                    res.render("login", {
-                                        layout: "main",
-                                        notValid
-                                    });
-                                    console.log(err);
-                                });
-                        })
-                        .catch(err => {
-                            console.log(err);
-                        });
+                                } else {
+                                    throw new Error("Password does not match!");
+                                }
+                            });
+                    });
                 }
             })
             .catch(err => {
+                res.render("login", {
+                    layout: "main",
+                    notValid
+                });
                 console.log(err);
             });
     }
