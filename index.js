@@ -170,8 +170,6 @@ app.post("/profile/edit", (req, res) => {
     let password = req.body.password;
     let userId = req.session.userId;
 
-    console.log(password);
-
     if (
         url.indexOf("http://") != 0 &&
         url.indexOf("https://") != 0 &&
@@ -183,15 +181,22 @@ app.post("/profile/edit", (req, res) => {
         age = null;
     }
 
-    bc.hashPassword(password)
+    let checkedPassword;
+
+    if (password) {
+        checkedPassword = bc.hashPassword(password);
+    } else {
+        checkedPassword = Promise.resolve();
+    }
+
+    checkedPassword
         .then(hashedPassword => {
-            if (password.length < 2) {
-                hashedPassword = "";
-            }
             return db
                 .editUser(firstName, lastName, email, hashedPassword, userId)
                 .then(() => {
-                    return db.editProfile(age, city, url, userId);
+                    if (age || city || url) {
+                        return db.editProfile(age, city, url, userId);
+                    }
                 })
                 .then(() => {
                     res.render("edit", {
@@ -386,6 +391,17 @@ app.get("/signers/:city", (req, res) => {
 app.post("/logout", (req, res) => {
     req.session = null;
     res.redirect("/login");
+});
+
+app.post("/unsign", (req, res) => {
+    db.deleteSignature(req.session.sigId)
+        .then(() => {
+            req.session.sigId = null;
+            res.redirect("/petition");
+        })
+        .catch(err => {
+            console.log(err);
+        });
 });
 
 app.use(express.static("./public"));

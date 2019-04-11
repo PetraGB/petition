@@ -54,7 +54,7 @@ exports.editUser = function editUser(
 ) {
     let q;
     let params;
-    if (password.length > 2) {
+    if (password) {
         q =
             "UPDATE users SET first_name = $1, last_name = $2, email = $3, password = $4 WHERE id = $5";
         params = [first_name, last_name, email, password, id];
@@ -76,6 +76,12 @@ exports.addSignature = function addSignature(signature, user_id) {
     let q =
         "INSERT INTO signatures (signature, user_id) VALUES ($1, $2) RETURNING id;";
     let params = [signature, user_id];
+    return db.query(q, params);
+};
+
+exports.deleteSignature = function deleteSignature(id) {
+    let q = "DELETE FROM signatures WHERE id = $1";
+    let params = [id];
     return db.query(q, params);
 };
 
