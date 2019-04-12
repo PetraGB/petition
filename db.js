@@ -108,9 +108,9 @@ exports.getSigners = function getSigners() {
     return db.query(q);
 };
 
-exports.getCitySigners = function getSigners(city) {
+exports.getCitySigners = function getCitySigners(city) {
     let q =
-        "SELECT first_name, last_name, age, url FROM users JOIN signatures ON users.id = signatures.user_id LEFT JOIN user_profiles ON users.id = user_profiles.user_id WHERE city = $1;";
+        "SELECT first_name, last_name, age, url FROM users JOIN signatures ON users.id = signatures.user_id LEFT JOIN user_profiles ON users.id = user_profiles.user_id WHERE LOWER(city) = LOWER($1);";
     let params = [city];
     return db.query(q, params);
 };
