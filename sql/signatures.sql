@@ -3,6 +3,6 @@ DROP TABLE IF EXISTS signatures;
 CREATE TABLE signatures(
     id SERIAL PRIMARY KEY,
     signature TEXT,
-    user_id INTEGER,
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE NOT NULL,
     signed_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );

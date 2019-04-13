@@ -85,6 +85,12 @@ exports.deleteSignature = function deleteSignature(id) {
     return db.query(q, params);
 };
 
+exports.deleteUser = function deleteUser(id) {
+    let q = "DELETE FROM users WHERE id = $1;";
+    let params = [id];
+    return db.query(q, params);
+};
+
 exports.getCount = function getCount() {
     let q = "SELECT COUNT(*) FROM signatures;";
     return db.query(q);

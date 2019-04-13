@@ -19,3 +19,10 @@
     <input type="hidden" name="_csrf" value="{{csrfToken}}">
     <button type="submit">Save</button>
 </form>
+
+<form method="POST" action="/deleteuser">
+    In case you want to delete your account:
+    <button>Delete account</button>
+    Watch out, this will delete all data we have from you, including any signatures. You will need to register again to access our petitions.
+    <input type="hidden" name="_csrf" value="{{csrfToken}}">
+</form>

@@ -416,6 +416,17 @@ app.post("/unsign", (req, res) => {
         });
 });
 
+app.post("/deleteuser", (req, res) => {
+    db.deleteUser(req.session.userId)
+        .then(() => {
+            req.session = null;
+            res.redirect("/login");
+        })
+        .catch(err => {
+            console.log(err);
+        });
+});
+
 app.use(express.static("./public"));
 
 if (require.main == module) {

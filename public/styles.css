@@ -86,6 +86,9 @@ blockquote {
 
 button {
     margin: 10px;
+    background-color: #fff5eb;
+    border: 1px solid #dbcc8f;
+    border-radius: 5px;
 }
 
 .explenation {

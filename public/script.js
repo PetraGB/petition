@@ -9,13 +9,13 @@ var startX;
 var startY;
 sigCanvas.addEventListener("mousedown", function(e) {
     signing = true;
-    startX = e.clientX - sigCanvas.offsetLeft;
-    startY = e.clientY - sigCanvas.offsetTop;
+    startX = e.pageX - sigCanvas.offsetLeft;
+    startY = e.pageY - sigCanvas.offsetTop;
 });
 
 sigCanvas.addEventListener("mousemove", function(e) {
-    var newX = e.clientX - sigCanvas.offsetLeft;
-    var newY = e.clientY - sigCanvas.offsetTop;
+    var newX = e.pageX - sigCanvas.offsetLeft;
+    var newY = e.pageY - sigCanvas.offsetTop;
     if (signing == true) {
         sigCtx.beginPath();
         sigCtx.strokeStyle = "black";
