@@ -1,5 +1,7 @@
 {{>nav}}
 
+<h2>Edit your profile details</h2>
+
 {{#if notValid}}
     <p>
         {{ notValid }}
@@ -7,13 +9,13 @@
 {{/if}}
 
 <form method="POST">
-    Age <input type="text" name="age" value="{{ age }}"/>
-    City <input type="text" name="city" value="{{ city }}"/>
-    Website <input type="text" name="url" value="{{ url }}"/>
-    First Name <input type="text" name="firstName" value="{{ firstName }}"/>
-    Last Name<input type="text" name="lastName" value="{{ lastName }}"/>
-    Email <input type="text" name="email" value="{{ email }}"/>
-    Password <input type="password" name="password" placeholder="Password"/>
+    Age <input type="text" name="age" value="{{ age }}" placeholder="Age" autocomplete="off"/>
+    City <input type="text" name="city" value="{{ city }}" placeholder="City" autocomplete="off"/>
+    Website <input type="text" name="url" value="{{ url }}" placeholder="Website" autocomplete="off"/>
+    First Name <input type="text" name="firstName" value="{{ firstName }}" placeholder="First Name" autocomplete="off"/>
+    Last Name<input type="text" name="lastName" value="{{ lastName }}" placeholder="Last Name" autocomplete="off"/>
+    Email <input type="email" name="email" value="{{ email }}" placeholder="Email" autocomplete="off"/>
+    Password <input type="password" name="password" placeholder="Password" autocomplete="off"/>
     <input type="hidden" name="_csrf" value="{{csrfToken}}">
     <button type="submit">Save</button>
 </form>

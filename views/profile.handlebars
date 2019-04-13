@@ -1,5 +1,7 @@
 {{>nav}}
 
+<h1>Please provide your profile details</h1>
+
 {{#if notValid}}
     <p>
         {{ notValid }}
@@ -7,9 +9,9 @@
 {{/if}}
 
 <form method="POST">
-    <input type="text" name="age" placeholder="Age"/>
-    <input type="text" name="city" placeholder="City"/>
-    <input type="text" name="url" placeholder="Website"/>
+    Age <input type="text" name="age" placeholder="Age" autocomplete="off"/>
+    City <input type="text" name="city" placeholder="City" autocomplete="off"/>
+    Website <input type="text" name="url" placeholder="Website" autocomplete="off"/>
     <input type="hidden" name="_csrf" value="{{csrfToken}}">
     <button type="submit">Save</button>
 </form>
