@@ -1,5 +1,5 @@
 const express = require("express");
-const app = express();
+const app = (exports.app = express());
 
 const db = require("./db");
 const bc = require("./bc");
@@ -129,7 +129,9 @@ app.post("/profile", (req, res) => {
         }
 
         db.addProfile(age, city, url, userId)
-            .then(res.redirect("/petition"))
+            .then(() => {
+                res.redirect("/petition");
+            })
             .catch(err => {
                 console.log(err);
             });
@@ -406,4 +408,6 @@ app.post("/unsign", (req, res) => {
 
 app.use(express.static("./public"));
 
-app.listen(8080, () => console.log("Petition"));
+if (require.main == module) {
+    app.listen(8080, () => console.log("Petition"));
+}
