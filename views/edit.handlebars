@@ -1,10 +1,10 @@
+{{>nav}}
+
 {{#if notValid}}
     <p>
         {{ notValid }}
     </p>
 {{/if}}
-
-{{>logout}}
 
 <form method="POST">
     Age <input type="text" name="age" value="{{ age }}"/>

@@ -1,0 +1,8 @@
+<nav>
+    <a href="/petition" class="navButton">Petition</a>
+    <a href="/signers" class="navButton">Signers</a>
+    <form method="POST" action="/logout">
+        <button class="navButton">Logout</button>
+        <input type="hidden" name="_csrf" value="{{csrfToken}}">
+    </form>
+</nav>

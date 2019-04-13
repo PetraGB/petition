@@ -1,11 +1,44 @@
 * {
     box-sizing: border-box;
+    font-family: helvetica, sans-serif;
 }
 
 body {
     margin: 0;
+    background-color: #f6e0b3;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
 
 #sigCanvas {
-    background-color: beige;
+    background-color: #fff5eb;
+}
+
+nav {
+    width: 100%;
+    height: 35px;
+    background-color: #4e4e4e;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+}
+
+.navButton {
+    background-color: #dbcc8f;
+    font-size: 16px;
+    font-family: helvetica, sans-serif;
+    text-decoration: none;
+    color: black;
+    height: 25px;
+    border: 2px solid #f6e0b3;
+    padding-left: 10px;
+    padding-right: 10px;
+    display: flex;
+    align-items: center;
+}
+
+blockquote {
+    background-color: #dbcc8f;
 }

@@ -88,6 +88,7 @@ app.post("/register", (req, res) => {
                             .addUser(firstName, lastName, email, hashedPassword)
                             .then(userId => {
                                 req.session.userId = userId.rows[0].id;
+                                req.session.justRegistered = true;
                                 res.redirect("/profile");
                             });
                     })
@@ -100,13 +101,22 @@ app.post("/register", (req, res) => {
 });
 
 app.get("/profile", (req, res) => {
-    if (!req.session.userId) {
-        res.redirect("/login");
-    } else {
+    if (req.session.justRegistered) {
+        req.session.justRegistered = null;
         res.render("profile", {
             layout: "main"
         });
+    } else {
+        res.redirect("/profile/edit");
     }
+
+    // if (!req.session.userId) {
+    //     res.redirect("/login");
+    // } else {
+    //     res.render("profile", {
+    //         layout: "main"
+    //     });
+    // }
 });
 
 app.post("/profile", (req, res) => {

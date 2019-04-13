@@ -1,8 +1,15 @@
-<h1>Petition</h1>
-{{>logout}}
-<p>
-    Please sign for goodness.
-</p>
+{{>nav}}
+
+<h1>Stop pushbacks in Ceuta and Malilla</h1>
+
+
+<blockquote>
+    <h3>
+        Everyone has the right to seek and to enjoy in other countries asylum from persecution.
+    </h3>
+    <p>Article 14</p>
+    <p>Of the Universal Declaration of Human Rights</p>
+</blockquote>
 
 {{#if notValid}}
     <p>
@@ -10,10 +17,10 @@
     </p>
 {{/if}}
 
-<form method="POST">
+<canvas height="150" width="360" id="sigCanvas"></canvas>
+
+<form method="POST" class="petition">
     <input type="hidden" name="signatureUrl" id="signatureField"/>
     <input type="hidden" name="_csrf" value="{{csrfToken}}">
     <button type="submit" id="submitSig">Submit</button>
 </form>
-
-<canvas height="150" width="360" id="sigCanvas"></canvas>
